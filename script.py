@@ -3,24 +3,30 @@ import openai
 from bs4 import BeautifulSoup
 import env
 import os.path
+import utils
 
 # Initialize OpenAI API
 openai.api_key = env.API_KEY
 
 # Define the list of important file extensions
-important_extensions = ["txt", "md", "py", "js", "html", "css"]
+important_extensions = [".py", ".js", ".html", ".css", ".md", ".txt", ".xml", ".json", ".yml", ".yaml", ".ini", ".cfg", ".sh", ".bat", ".ps1", ".php", ".rb", ".java", ".cpp", ".h", ".c", ".cs", ".swift", ".m", ".mm", ".go", ".rs", ".pl", ".pm", ".tcl", ".vhdl", ".verilog", ".asm", ".s", ".tex", ".ts", ".tsx", ".jsx"]
+
 
 def get_files_in_folder(url, path="", visited_urls=set()):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "lxml")
-    print("Entered URL: " + url)
+
     # Check if the URL is a file or a folder
     if "." in url.split("/")[-1]:
         # Get the code/text from the file and store the path
-        extension = url.split(".")[-1]
+        extension = utils.clean_string(url.split(".")[-1]).strip()
+        print("extension: "+extension)
         if extension in important_extensions:
-            raw_url = "https://raw.githubusercontent.com" + url.replace("/blob/", "/")
+            raw_url = utils.transform_url(url).replace("/blob/", "/")
+            print("raw: "+raw_url)
             response = requests.get(raw_url)
+            print("response: \n")
+            print(response)
             if len(response.content) > 2_000_000:
                 print("Skipping file due to large size: " + url)
                 return []
