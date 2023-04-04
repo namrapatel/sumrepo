@@ -27,7 +27,7 @@ def get_files_in_folder(url, path="", visited_urls=set()):
     hrefs = []
     for link in soup.find_all("a"):
         href = link.get("href")
-        if (href.startswith("/HaliteChallenge/Halite/tree/master/") 
+        if ((href.startswith("/HaliteChallenge/Halite/tree/master/") or href.startswith("/HaliteChallenge/Halite/blob/master/")) 
                 and not href.endswith("/") 
                 and href not in visited_urls):
             visited_urls.add(href)
@@ -46,7 +46,7 @@ def get_all_file_urls(url):
     file_urls = []
     for link in soup.find_all("a"):
         href = link.get("href")
-        if href.startswith("/HaliteChallenge/Halite/tree/master/") and not href.endswith("/"):
+        if ((href.startswith("/HaliteChallenge/Halite/tree/master/") or href.startswith("/HaliteChallenge/Halite/blob/master/")) and not href.endswith("/")):
             with open("output.txt", "a") as f:
                 f.write("Main URL: " + url + "\n")
                 f.write("Entered sub-URL: " + href + "\n")
@@ -61,7 +61,6 @@ with open("output.txt", "a") as f:
     f.write("FILE URLS:\n")
     for file_url in file_urls:
         f.write(str(file_url) + "\n")
-
 
 # Summarize the contents of each file
 # summaries = []
