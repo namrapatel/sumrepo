@@ -2,16 +2,18 @@ import requests
 import openai
 from bs4 import BeautifulSoup
 import env
+import os.path
 
 # Initialize OpenAI API
 openai.api_key = env.API_KEY
 
-important_extensions = [".py", ".js", ".html", ".md", ".txt", ".xml", ".json", ".yml", ".yaml", ".ini", ".cfg", ".sh", ".bat", ".ps1", ".php", ".rb", ".java", ".cpp", ".h", ".c", ".cs", ".swift", ".m", ".mm", ".go", ".rs", ".pl", ".pm", ".tcl", ".vhdl", ".verilog", ".asm", ".s", ".tex"]
+# Define the list of important file extensions
+important_extensions = ["txt", "md", "py", "js", "html", "css"]
 
 def get_files_in_folder(url, path="", visited_urls=set()):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "lxml")
-
+    print("Entered URL: " + url)
     # Check if the URL is a file or a folder
     if "." in url.split("/")[-1]:
         # Get the code/text from the file and store the path
@@ -40,7 +42,7 @@ def get_files_in_folder(url, path="", visited_urls=set()):
     hrefs = []
     for link in soup.find_all("a"):
         href = link.get("href")
-        if ((href.startswith("/HaliteChallenge/Halite/tree/master/") or href.startswith("/HaliteChallenge/Halite/blob/master/")) 
+        if ((href.startswith("/" + repo_owner + "/" + repo_name + "/tree/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/tree/main/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/main/")) 
                 and not href.endswith("/") 
                 and href not in visited_urls):
             visited_urls.add(href)
@@ -54,28 +56,45 @@ def get_files_in_folder(url, path="", visited_urls=set()):
     return file_infos
 
 
+# Get the repository URL from user input
+repo_url = input("Enter the repository URL: ")
 
-def get_all_file_urls(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, "lxml")
-    file_urls = []
-    for link in soup.find_all("a"):
-        href = link.get("href")
-        if ((href.startswith("/HaliteChallenge/Halite/tree/master/") or href.startswith("/HaliteChallenge/Halite/blob/master/")) and not href.endswith("/")):
-            with open("output.txt", "a") as f:
-                f.write("Main URL: " + url + "\n")
-                f.write("Entered sub-URL: " + href + "\n")
-            file_urls += get_files_in_folder("https://github.com" + href)
-    return file_urls
+# Extract the repository owner and name from the URL
+repo_owner = repo_url.split("/")[-2]
+repo_name = repo_url.split("/")[-1]
 
+print("Retrieving files from " + repo_owner + "/" + repo_name + "...")
 # Retrieve Github repository contents
-url = "https://github.com/HaliteChallenge/Halite"
-file_urls = get_all_file_urls(url)
+url = "https://github.com/" + repo_owner + "/" + repo_name
+response = requests.get(url)
+soup = BeautifulSoup(response.text, "lxml")
+
+# Extract names and URLs of all files and directories
+file_infos = []
+for link in soup.find_all("a"):
+    href = link.get("href")
+    if ((href.startswith("/" + repo_owner + "/" + repo_name + "/tree/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/tree/main/")) 
+            and not href.endswith("/")):
+        with open("output.txt", "a") as f:
+            f.write("Main URL: " + url + "\n")
+            f.write("Entered subURL " + href + "\n")
+            file_infos += get_files_in_folder("https://github.com" + href)
 
 with open("output.txt", "a") as f:
-    f.write("FILE URLS:\n")
-    for file_url in file_urls:
-        f.write(str(file_url) + "\n")
+    f.write("FILE INFOS:\n")
+    for file_info in file_infos:
+        f.write(str(file_info) + "\n")
+
+# Save the file contents to disk
+for file_info in file_infos:
+    file_path = file_info["path"]
+    file_content = file_info["content"]
+    dir_path = os.path.dirname(file_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    with open(file_path, "w") as f:
+        f.write(file_content)
+
 
 
 # Summarize the contents of each file
