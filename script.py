@@ -91,17 +91,6 @@ with open("output.txt", "a") as f:
     for file_info in file_infos:
         f.write(str(file_info) + "\n")
 
-# Save the file contents to disk
-for file_info in file_infos:
-    file_path = file_info["path"]
-    file_content = file_info["content"]
-    dir_path = os.path.dirname(file_path)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-    with open(file_path, "w") as f:
-        f.write(file_content)
-
-
 
 # Summarize the contents of each file
 # summaries = []
