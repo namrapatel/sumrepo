@@ -20,17 +20,12 @@ def get_files_in_folder(url, path="", visited_urls=set()):
     if "." in url.split("/")[-1]:
         # Get the code/text from the file and store the path
         extension = utils.clean_string(url.split(".")[-1]).strip()
-        print("extension: "+extension)
         if extension in important_extensions:
             raw_url = utils.transform_url(url).replace("/blob/", "/")
-            print("raw: "+raw_url)
             response = requests.get(raw_url)
-            print("response: \n")
-            print(response)
             if len(response.content) > 2_000_000:
                 print("Skipping file due to large size: " + url)
                 return []
-            print("File found: " + url)
             text = response.text
             file_path = path + url.split("/")[-1]
             file_info = {
@@ -38,9 +33,6 @@ def get_files_in_folder(url, path="", visited_urls=set()):
                 "path": file_path,
                 "content": text,
             }
-            with open("output.txt", "a") as f:
-                f.write("File found: " + url + "\n")
-                f.write("File path: " + file_path + "\n")
             return [file_info]
 
     # If the URL is a folder, recursively retrieve all file URLs within it
@@ -52,13 +44,8 @@ def get_files_in_folder(url, path="", visited_urls=set()):
                 and not href.endswith("/") 
                 and href not in visited_urls):
             visited_urls.add(href)
-            with open("output.txt", "a") as f:
-                f.write("Entered sub-URL: " + href + "\n")
             hrefs.append(href)
             file_infos += get_files_in_folder("https://github.com" + href, path + href.split("/")[-1] + "/", visited_urls)
-    with open("output.txt", "a") as f:
-        f.write("Sub-URL: " + url + "\n")
-        f.write("Hrefs: " + str(hrefs) + "\n")
     return file_infos
 
 
@@ -81,10 +68,7 @@ for link in soup.find_all("a"):
     href = link.get("href")
     if ((href.startswith("/" + repo_owner + "/" + repo_name + "/tree/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/tree/main/")) 
             and not href.endswith("/")):
-        with open("output.txt", "a") as f:
-            f.write("Main URL: " + url + "\n")
-            f.write("Entered subURL " + href + "\n")
-            file_infos += get_files_in_folder("https://github.com" + href)
+        file_infos += get_files_in_folder("https://github.com" + href)
 
 with open("output.txt", "a") as f:
     f.write("FILE INFOS:\n")
@@ -93,13 +77,22 @@ with open("output.txt", "a") as f:
 
 
 # Summarize the contents of each file
-# summaries = []
-# print(file_urls)
-# for file_url in file_urls:
-#     response = requests.get(file_url)
-#     text = response.text
-#     summary = openai.ChatCompletion.create(
-#         model="gpt-3.5-turbo",
-#         messages=[
-#             {"role": "system", "content": "You are a helpful assistant."},
-#             {"role": "user",
+summaries = []
+for file_info in file_infos:
+    print("Summarizing " + file_info["name"] + "...")
+
+    summary = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant who is also an expert Software Engineer. You will be given some code and are asked to summarize its functionality and significance in the codebase that it comes from in 2 sentences or less."},
+            {"role": "user", "content": file_info["content"]},
+        ],
+    )
+    print(summary)
+    print(summary["choices"][0]["message"])
+    summaries.append(summary)
+
+# Write the summaries to a file
+with open("output.txt", "a") as f:
+    for summary in summaries:
+        f.write(summary["choices"][0]["message"] + "\n")
