@@ -17,7 +17,8 @@ def get_files_in_folder(url, path="", visited_urls=set()):
         # Get the code/text from the file and store the path
         extension = url.split(".")[-1]
         if extension in important_extensions:
-            response = requests.get(url)
+            raw_url = "https://raw.githubusercontent.com" + url.replace("/blob/", "/")
+            response = requests.get(raw_url)
             if len(response.content) > 2_000_000:
                 print("Skipping file due to large size: " + url)
                 return []
@@ -51,6 +52,7 @@ def get_files_in_folder(url, path="", visited_urls=set()):
         f.write("Sub-URL: " + url + "\n")
         f.write("Hrefs: " + str(hrefs) + "\n")
     return file_infos
+
 
 
 def get_all_file_urls(url):

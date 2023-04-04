@@ -1,26 +1,31 @@
-import requests
-from bs4 import BeautifulSoup
+from github import Github, UnknownObjectException
 
-url = 'https://github.com/HaliteChallenge/Halite/blob/master/admin/cron/haliteEmailer.py'
-response = requests.get(url).content
-# soup = BeautifulSoup(response.text, 'html.parser')
-# code = soup.find('div', {'class': 'highlight'}).text
-print(response)
+url = 'https://raw.githubusercontent.com/HaliteChallenge/Halite/master/admin/cron/haliteEmailer.py'
+# Parse the URL to extract the repository name, file path, and branch name
+_, _, repo_name, _, branch_name, *file_path = url.split('/')
+file_path = '/'.join(file_path)
+
+print(repo_name)
+print(branch_name)
+print(file_path)
 
 
+# Authenticate with GitHub using an access token or username/password
+g = Github('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')
+# Retrieve the repository and branch
+try:
+    repo = g.get_repo(repo_name)
+    branch = repo.get_branch(branch_name)
+except UnknownObjectException as e:
+    print(f"Error: {e}")
+    print("Make sure the repository and branch names are correct.")
+    exit()
+# Retrieve the file contents as a string
+try:
+    file_contents = repo.get_contents(file_path, ref=branch.name).decoded_content.decode()
+except UnknownObjectException as e:
+    print(f"Error: {e}")
+    print("Make sure the file path and name are correct.")
+    exit()
 
-def get_all_file_urls(url):
-    response = requests.get("https://github.com/HaliteChallenge/Halite/blob/master/admin/cron/")
-    soup = BeautifulSoup(response.text, "lxml")
-    file_urls = []
-    for link in soup.find_all("a"):
-        href = link.get("href")
-        print(href)
-        if href.startswith("/HaliteChallenge/Halite/blob/master/") and not href.endswith("/"):
-            with open("output.txt", "a") as f:
-                f.write("Main URL: " + url + "\n")
-                f.write("Entered sub-URL: " + href + "\n")
-            # file_urls += get_files_in_folder("https://github.com" + href)
-    return file_urls
-
-# file_urls = get_all_file_urls(url)
+print(file_contents)
