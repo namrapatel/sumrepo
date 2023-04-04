@@ -15,7 +15,7 @@ soup = BeautifulSoup(response.text, "lxml")
 file_urls = []
 for link in soup.find_all("a"):
     href = link.get("href")
-    if href.startswith("/HaliteChallenge/Halite/blob/master/"):
+    if href.startswith("/HaliteChallenge/Halite/tree/master/"):
         file_urls.append("https://github.com" + href)
 
 # Summarize the contents of each file
@@ -24,7 +24,7 @@ print(file_urls)
 for file_url in file_urls:
     response = requests.get(file_url)
     text = response.text
-    summary = openai.Completion.create(
+    summary = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -32,14 +32,5 @@ for file_url in file_urls:
             {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
             {"role": "user", "content": "Where was it played?"}
         ],
-        temperature=0.5,
-        max_tokens=50000,
-        n = 1,
-        stop=None,
     )
-    summary_text = summary.choices[0].text.strip()
-    summaries.append(summary_text)
-
-# Generate a one-pager summarizing the entire repository
-one_pager = "\n".join(summaries)
-print(one_pager)
+    print(summary)
