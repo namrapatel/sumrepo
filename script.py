@@ -6,6 +6,8 @@ import env
 # Initialize OpenAI API
 openai.api_key = env.API_KEY
 
+important_extensions = [".py", ".js", ".html", ".md", ".txt", ".xml", ".json", ".yml", ".yaml", ".ini", ".cfg", ".sh", ".bat", ".ps1", ".php", ".rb", ".java", ".cpp", ".h", ".c", ".cs", ".swift", ".m", ".mm", ".go", ".rs", ".pl", ".pm", ".tcl", ".vhdl", ".verilog", ".asm", ".s", ".tex"]
+
 def get_files_in_folder(url, path="", visited_urls=set()):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "lxml")
@@ -13,17 +15,27 @@ def get_files_in_folder(url, path="", visited_urls=set()):
     # Check if the URL is a file or a folder
     if "." in url.split("/")[-1]:
         # Get the code/text from the file and store the path
-        print("File found: " + url)
-        response = requests.get(url)
-        text = response.text
-        file_path = path + url.split("/")[-1]
-        with open("output.txt", "a") as f:
-            f.write("File found: " + url + "\n")
-            f.write("File path: " + file_path + "\n")
-        return [(text, file_path)]
+        extension = url.split(".")[-1]
+        if extension in important_extensions:
+            response = requests.get(url)
+            if len(response.content) > 2_000_000:
+                print("Skipping file due to large size: " + url)
+                return []
+            print("File found: " + url)
+            text = response.text
+            file_path = path + url.split("/")[-1]
+            file_info = {
+                "name": url.split("/")[-1],
+                "path": file_path,
+                "content": text,
+            }
+            with open("output.txt", "a") as f:
+                f.write("File found: " + url + "\n")
+                f.write("File path: " + file_path + "\n")
+            return [file_info]
 
     # If the URL is a folder, recursively retrieve all file URLs within it
-    file_urls = []
+    file_infos = []
     hrefs = []
     for link in soup.find_all("a"):
         href = link.get("href")
@@ -34,11 +46,12 @@ def get_files_in_folder(url, path="", visited_urls=set()):
             with open("output.txt", "a") as f:
                 f.write("Entered sub-URL: " + href + "\n")
             hrefs.append(href)
-            file_urls += get_files_in_folder("https://github.com" + href, path + href.split("/")[-1] + "/", visited_urls)
+            file_infos += get_files_in_folder("https://github.com" + href, path + href.split("/")[-1] + "/", visited_urls)
     with open("output.txt", "a") as f:
         f.write("Sub-URL: " + url + "\n")
         f.write("Hrefs: " + str(hrefs) + "\n")
-    return file_urls
+    return file_infos
+
 
 def get_all_file_urls(url):
     response = requests.get(url)
@@ -62,6 +75,7 @@ with open("output.txt", "a") as f:
     for file_url in file_urls:
         f.write(str(file_url) + "\n")
 
+
 # Summarize the contents of each file
 # summaries = []
 # print(file_urls)
@@ -72,9 +86,4 @@ with open("output.txt", "a") as f:
 #         model="gpt-3.5-turbo",
 #         messages=[
 #             {"role": "system", "content": "You are a helpful assistant."},
-#             {"role": "user", "content": "Who won the world series in 2020?"},
-#             {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
-#             {"role": "user", "content": "Where was it played?"}
-#         ],
-#     )
-#    
+#             {"role": "user",

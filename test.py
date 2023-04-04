@@ -1,14 +1,11 @@
-# import os
-
-url = "https://github.com/HaliteChallenge/Halite/blob/master/admin/cron/"
-
-# if os.path.basename(url).find('.') != -1:
-#     print("File found: " + url)
-
 import requests
-import openai
 from bs4 import BeautifulSoup
-import env
+
+url = 'https://github.com/HaliteChallenge/Halite/blob/master/admin/cron/haliteEmailer.py'
+response = requests.get(url).content
+# soup = BeautifulSoup(response.text, 'html.parser')
+# code = soup.find('div', {'class': 'highlight'}).text
+print(response)
 
 
 
@@ -26,7 +23,4 @@ def get_all_file_urls(url):
             # file_urls += get_files_in_folder("https://github.com" + href)
     return file_urls
 
-# Retrieve Github repository contents
-url = "https://github.com/HaliteChallenge/Halite"
-
-file_urls = get_all_file_urls(url)
+# file_urls = get_all_file_urls(url)
