@@ -17,26 +17,25 @@ def main():
     url = "https://github.com/" + repo_owner + "/" + repo_name
     file_infos = github.get_files_in_folder(url, repo_owner, repo_name)
 
-    with open("output.txt", "a") as f:
-        f.write("FILE INFOS:\n")
+    with open("output.txt", "w") as f:
+        f.write("Files information:\n")
         for file_info in file_infos:
             f.write(str(file_info) + "\n")
 
     # Summarize the contents of each file
-    summaries = []
+    summarized_files = []
     for file_info in file_infos:
         print("Summarizing " + file_info["name"] + "...")
         content = file.get_file_content(file_info["path"])
         summary_text = json.dumps(summary.summarize_content(content))
-        print(type(summary_text))
-        print(summary_text)
-        summaries.append(summary_text)
+        summarized_files.append({"name": file_info["name"], "path": file_info["path"], "summary": summary_text})
 
     # Write the summaries to a file
-    with open("output.txt", "a") as f:
-        f.write("SUMMARIES:\n")
-        for summary_text in summaries:
-            f.write(summary_text + "\n")
+    with open("output.txt", "w") as f:
+        f.write("Summaries:\n")
+        for line in summarized_files:
+            f.write(f"{line['name']}: {line['summary']}\n")
+
 
 
 if __name__ == '__main__':

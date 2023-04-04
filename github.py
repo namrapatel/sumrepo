@@ -11,7 +11,8 @@ def get_soup(url):
 
 
 def get_files_in_folder(url, repo_owner, repo_name, path="", visited_urls=set()):
-    soup = get_soup(url)
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, "lxml")
 
     # Check if the URL is a file or a folder
     if "." in url.split("/")[-1]:
@@ -37,10 +38,14 @@ def get_files_in_folder(url, repo_owner, repo_name, path="", visited_urls=set())
     hrefs = []
     for link in soup.find_all("a"):
         href = link.get("href")
-        if ((href.startswith("/" + repo_owner + "/" + repo_name + "/tree/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/tree/main/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/main/"))
-                and not href.endswith("/")
-                and href not in visited_urls):
+        if ((href.startswith("/" + repo_owner + "/" + repo_name + "/tree/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/tree/main/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/main/")) 
+                and not href.endswith("/") 
+                and href not in visited_urls
+                and href.split("/")[-1] not in IGNORED_FILENAMES):
             visited_urls.add(href)
             hrefs.append(href)
             file_infos += get_files_in_folder("https://github.com" + href, repo_owner, repo_name, path + href.split("/")[-1] + "/", visited_urls)
     return file_infos
+
+# Define a list of ignored file and folder names
+IGNORED_FILENAMES = ['.DS_Store', '.git', '.svn', '__pycache__', 'node_modules', 'vendor', '.idea', '.vscode', '.gradle', '.sass-cache']
