@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import utils
 
-important_extensions = [".py", ".js", ".html", ".css", ".md", ".txt", ".xml", ".json", ".yml", ".yaml", ".ini", ".cfg", ".sh", ".bat", ".ps1", ".php", ".rb", ".java", ".cpp", ".h", ".c", ".cs", ".swift", ".m", ".mm", ".go", ".rs", ".pl", ".pm", ".tcl", ".vhdl", ".verilog", ".asm", ".s", ".tex", ".ts", ".tsx", ".jsx"]
+important_extensions = [".py", ".js", ".html", ".md", ".txt", ".go", ".rs", ".ts", ".tsx", ".jsx", ".sol", ".circom", ".xml", ".json", ".yml", ".yaml", ".ini", ".cfg", ".sh", ".bat", ".ps1", ".php", ".rb", ".java", ".cpp", ".h", ".c", ".cs", ".swift", ".m", ".mm", ".pl", ".pm", ".tcl", ".vhdl", ".verilog", ".asm", ".s", ".tex"]
 
 def get_soup(url):
     response = requests.get(url)
@@ -37,6 +37,12 @@ def get_files_in_folder(url, repo_owner, repo_name, path="", visited_urls=set())
     hrefs = []
     for link in soup.find_all("a"):
         href = link.get("href")
+        if href is None:
+            print("Warning: link object has no 'href' attribute")
+            continue
+        if not isinstance(href, str):
+            print("Warning: 'href' attribute is not a string")
+            continue
         if ((href.startswith("/" + repo_owner + "/" + repo_name + "/tree/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/master/") or href.startswith("/" + repo_owner + "/" + repo_name + "/tree/main/") or href.startswith("/" + repo_owner + "/" + repo_name + "/blob/main/")) 
                 and not href.endswith("/") 
                 and href not in visited_urls
