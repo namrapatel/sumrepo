@@ -1,5 +1,5 @@
 import github
-import summary
+import gpt
 import json
 import utils
 
@@ -33,7 +33,7 @@ def main():
             path,
             url
         )
-        summary_text = json.dumps(summary.summarize_content(content))
+        summary_text = json.dumps(gpt.summarize_file(content))
         summarized_files.append({"name": file_info["name"], "path": path, "summary": summary_text})
 
     # Write the summaries to a file
@@ -43,9 +43,11 @@ def main():
             f.write(f"{line['name']}: {line['summary']}\n")
 
     # Make another chat completion request to summarize the summaries
-    # print("Summarizing the summaries...")
-    # summary_text = ""
-    # for line in summarized_files:
+    print("Summarizing the summaries...")
+    summary_text = ""
+    for line in summarized_files:
+        summary_text += line["summary"] + "\n"
+    summary_text = json.dumps(gpt.summarize_summaries(summary_text)) 
 
 
 
