@@ -1,7 +1,7 @@
 import github
-import file
 import summary
 import json
+import utils
 
 
 def main():
@@ -26,15 +26,27 @@ def main():
     summarized_files = []
     for file_info in file_infos:
         print("Summarizing " + file_info["name"] + "...")
-        content = file.get_file_content(file_info["path"])
+        path =  utils.get_path_from_url(file_info["url"], repo_owner)
+        url = utils.get_file_content(file_info["url"])
+        content = "File name: {}\nFile path: {}\nCode:\n{}\n".format(
+            file_info["name"],
+            path,
+            url
+        )
         summary_text = json.dumps(summary.summarize_content(content))
-        summarized_files.append({"name": file_info["name"], "path": file_info["path"], "summary": summary_text})
+        summarized_files.append({"name": file_info["name"], "path": path, "summary": summary_text})
 
     # Write the summaries to a file
     with open("output.txt", "w") as f:
         f.write("Summaries:\n")
         for line in summarized_files:
             f.write(f"{line['name']}: {line['summary']}\n")
+
+    # Make another chat completion request to summarize the summaries
+    # print("Summarizing the summaries...")
+    # summary_text = ""
+    # for line in summarized_files:
+
 
 
 

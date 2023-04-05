@@ -25,10 +25,9 @@ def get_files_in_folder(url, repo_owner, repo_name, path="", visited_urls=set())
                 print("Skipping file due to large size: " + url)
                 return []
             text = response.text
-            file_path = path + url.split("/")[-1]
             file_info = {
                 "name": url.split("/")[-1],
-                "path": file_path,
+                "url": raw_url,
                 "content": text,
             }
             return [file_info]

@@ -1,4 +1,5 @@
 import string 
+import requests
 
 def is_file(url):
     return "." in url.split("/")[-1]
@@ -21,3 +22,18 @@ def transform_url(url):
     new_url = '/'.join(parts)
 
     return new_url
+
+def get_file_content(url):
+    if not url.startswith('http'):
+        url = 'https://' + url
+    raw_url = transform_url(url).replace("/blob/", "/")
+    response = requests.get(raw_url)
+    text = response.text
+    return text
+
+def get_path_from_url(url: str, repo_owner: str) -> str:
+    index = url.find(repo_owner)
+    if index != -1:
+        return url[index:]
+    else:
+        return url
