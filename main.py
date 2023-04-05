@@ -46,8 +46,17 @@ def main():
     print("Summarizing the summaries...")
     summary_text = ""
     for line in summarized_files:
-        summary_text += line["summary"] + "\n"
-    summary_text = json.dumps(gpt.summarize_summaries(summary_text)) 
+        content += "File name: {}\nFile path: {}\Code Summary:\n{}\n\n".format(
+            line["name"],
+            line["path"],
+            line["summary"]
+        )
+    summary_text = json.dumps(gpt.summarize_summaries(content)) 
+
+    # Write the summary to a file
+    with open("output.txt", "a") as f:
+        f.write("\nFINAL SUMMARY: \n")
+        f.write(summary_text)
 
 
 
